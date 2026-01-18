@@ -1,0 +1,122 @@
+---
+title: "SparseSignatures_ex"
+author: "Fatemeh Nas"
+date: "2025-01-31"
+output: html_document
+---
+
+```{r}
+library("SparseSignatures")
+#data(ssm560_reduced)
+#head(ssm560_reduced)
+```
+
+```{r}
+maf <- read.table("/group/sottoriva/fatemeh.nasrabadi/ROVIGO/mut_signatures/barplots/maf_unicorn_for_sparse_muts.tsv", sep = "\t", header = TRUE, stringsAsFactors = FALSE, row.names = NULL)
+
+head(maf)
+```
+
+```{r}
+library("BSgenome.Hsapiens.UCSC.hg38")
+bsg = BSgenome.Hsapiens.UCSC.hg38
+data(mutation_categories)
+head(mutation_categories)
+```
+
+```{r}
+maf_for_sigs = import.trinucleotides.counts(data=maf,reference=bsg)
+head(maf_for_sigs)
+```
+```{r fig.width=7, fig.height=7, fig.cap="Visualization of the counts from patient PD10010a from the dataset published in Nik-Zainal, Serena, et al."}
+library(ggplot2)
+
+unique_samples <- unique(maf$sample)
+output_dir <- "/group/sottoriva/fatemeh.nasrabadi/ROVIGO/mut_signatures/barplots/"
+for (sample in unique_samples) {
+  plot <- patients.plot(trinucleotides_counts = maf_for_sigs, samples = sample)
+  file_name <- paste0(output_dir, sample, "_mut_sigs_barplot.png")
+  ggsave(file_name, plot = plot, width = 8, height = 6, dpi = 300)
+}
+
+```
+```{r eval=FALSE}
+data(background)
+starting_betas = startingBetaEstimation(x=maf_for_sigs,K=3:12, background_signature=background,) # TIME
+```
+```{r eval=FALSE}
+lambda_range = lambdaRangeBetaEvaluation(x=maf_for_sigs,K=10,beta=starting_betas[[8,1]],background_signature = background,
+                                         lambda_values=c(0.05,0.10)) #TIME
+```
+We notice that the computations for this task can be very time consuming, expecially when many iterations of cross validations are specified (see manual) and a large set of configurations of the parameters are tested. To speed up the execution, we suggest using the parallel execution options. Also, to reduce the memory requirements, we advise splitting the cross validation in different runs, e.g., if one wants to perform 100 iterations, we would suggest making 10 independent runs of 10 iterations each. Also in this case, we provide as examples together with the package a set of pre-computed results obtained with the above command and the following settings: K = 3:10, cross validation entries = 0.10, lambda values = c(0.05,0.10,0.15), number of iterations of cross-validation = 2.
+
+```{r eval=FALSE}
+cv = nmfLassoCV(x=maf_for_sigs,K=3:10, background_signature = background,iterations = 2, nmf_runs = 5, cross_validation_entries = 0.1, lambda_values_alpha =c(0.05,0.10,0.15), lambda_values_beta = c(0.05,0.10,0.15) ) #here we search for combination of parameters and n signatures with cross validation
+```
+
+```{r}
+beta = starting_betas[["6_signatures","Value"]]
+res = nmfLasso(x = maf_for_sigs, K = 6, beta = beta, background_signature = background, seed = 12345)
+```
+```{r fig.width=7, fig.height=7, fig.cap="Visualization of the discovered signatures."}
+signatures = res$beta
+signatures.plot(beta=signatures, xlabels=FALSE)
+```
+
+
+```{r}
+library("BSgenome.Hsapiens.1000genomes.hs37d5")
+bsg = BSgenome.Hsapiens.1000genomes.hs37d5
+data(mutation_categories)
+head(mutation_categories)
+```
+```{r}
+imported_data = import.trinucleotides.counts(data=ssm560_reduced,reference=bsg)
+head(imported_data)
+```
+
+```{r fig.width=7, fig.height=7, fig.cap="Visualization of the counts from patient PD10010a from the dataset published in Nik-Zainal, Serena, et al."}
+patients.plot(trinucleotides_counts=imported_data,samples="PD10010a")
+```
+
+```{r}
+data(patients)
+head(patients)
+```
+
+```{r eval=FALSE}
+starting_betas = startingBetaEstimation(x=patients,K=3:12) # TIME
+```
+```{r eval=FALSE}
+lambda_range = lambdaRangeBetaEvaluation(x=patients,K=10,beta=starting_betas[[8,1]],
+                                         lambda_values=c(0.05,0.10)) #TIME
+```
+
+```{r}
+data(starting_betas_example)
+data(lambda_range_example)
+```
+
+```{r eval=FALSE}
+cv = nmfLassoCV(x=patients,K=3:10) #here we search for combination of parameters and n signatures with cross validation
+```
+We notice that the computations for this task can be very time consuming, expecially when many iterations of cross validations are specified (see manual) and a large set of configurations of the parameters are tested. To speed up the execution, we suggest using the parallel execution options. Also, to reduce the memory requirements, we advise splitting the cross validation in different runs, e.g., if one wants to perform 100 iterations, we would suggest making 10 independent runs of 10 iterations each. Also in this case, we provide as examples together with the package a set of pre-computed results obtained with the above command and the following settings: K = 3:10, cross validation entries = 0.10, lambda values = c(0.05,0.10,0.15), number of iterations of cross-validation = 2. 
+
+```{r}
+data(cv_example)
+```
+
+Finally, we can compute the signatures for the best configuration, i.e., K = 5. 
+
+```{r}
+beta = starting_betas_example[["5_signatures","Value"]]
+res = nmfLasso(x = patients, K = 5, beta = beta, background_signature = background, seed = 12345)
+```
+We conclude this vignette by plotting the discovered signatures. 
+
+```{r fig.width=7, fig.height=7, fig.cap="Visualization of the discovered signatures."}
+data(nmf_LassoK_example)
+signatures = nmf_LassoK_example$beta
+signatures.plot(beta=signatures, xlabels=FALSE)
+```
+

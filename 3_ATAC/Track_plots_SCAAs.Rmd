@@ -1,0 +1,447 @@
+---
+title: "Chrep_organoids_track_plots"
+author: "Alexandra Livanova"
+date: "2025-02-20"
+output: html_document
+---
+```{r}
+# R 4.2.3
+#installations
+# Create a personal library folder (change path if you like)
+dir.create("~/Rlibs", showWarnings = FALSE)
+
+# Tell R to use this library as well
+.libPaths("~/Rlibs")
+
+# Now install packages here
+install.packages("BSgenome.Hsapiens.UCSC.hg38")
+# or for Bioconductor
+BiocManager::install("BSgenome.Hsapiens.UCSC.hg38")
+
+BiocManager::install("EnsDb.Hsapiens.v86")
+
+
+```
+
+```{r}
+library(Signac)
+library(Seurat)
+library(EnsDb.Hsapiens.v86)
+library(BSgenome.Hsapiens.UCSC.hg38)
+```
+
+```{r}
+#
+#BiocManager::install("biovizBase")
+# get gene annotations for hg38
+annotation <- GetGRangesFromEnsDb(ensdb = EnsDb.Hsapiens.v86)
+seqlevels(annotation) <- paste0('chr', seqlevels(annotation))
+```
+
+```{r}
+#install.packages("hdf5r")
+```
+```{r}
+
+library(Seurat)
+library(Signac)
+
+make_multiome_seurat <- function(matrix_path, frag_path, sample_id, annotation) {
+  # read 10X multiome data
+  counts <- Read10X_h5(matrix_path)
+  
+  # RNA assay
+  so <- CreateSeuratObject(
+    counts  = counts$`Gene Expression`,
+    assay   = "RNA",
+    project = sample_id
+  )
+  
+  # ATAC assay
+  so[["ATAC"]] <- CreateChromatinAssay(
+    counts     = counts$Peaks,
+    sep        = c(":", "-"),
+    fragments  = frag_path,
+    annotation = annotation
+  )
+  
+  # store sample ID in metadata
+  so$sample_id <- sample_id
+  
+  return(so)
+}
+
+```
+
+```{r}
+
+fragpath_core_BT1_BT2_BT4 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/pre_demultiplexing/BTHROHT01_BTHROHT02_BTHROHT04/multiome/LAZ_315/atac_fragments.tsv.gz"
+
+core_BT1_BT2_BT4_obj <- make_multiome_seurat(
+  matrix_path = "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/pre_demultiplexing/BTHROHT01_BTHROHT02_BTHROHT04/multiome/LAZ_315/filtered_feature_bc_matrix.h5",
+  frag_path   = fragpath_core_BT1_BT2_BT4,
+  sample_id   = "core_BT1_BT2_BT4",
+  annotation  = annotation
+)
+core_BT1_BT2_BT4_obj
+
+###########
+
+fragpath_core_BT3_BT6 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/pre_demultiplexing/BTROHT_03_BTROHT06/multiome/LAZ_01461/atac_fragments.tsv.gz"
+
+core_BT3_BT6 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/pre_demultiplexing/BTROHT_03_BTROHT06/multiome/LAZ_01461/filtered_feature_bc_matrix.h5"
+
+core_BT3_BT6_obj <- make_multiome_seurat(
+  matrix_path = core_BT3_BT6,   # path to filtered_feature_bc_matrix.h5
+  frag_path   = fragpath_core_BT3_BT6,
+  sample_id   = "core_BT3_BT6",
+  annotation  = annotation
+)
+
+### peri 1 ###
+
+peri_BT1 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT01/BTROHT01/BTROHT01_T1_T7_T9/multiome/LAZ_160/filtered_feature_bc_matrix.h5"
+fragpath_peri_BT1 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT01/BTROHT01/BTROHT01_T1_T7_T9/multiome/LAZ_160/atac_fragments.tsv.gz"
+
+peri_BT1_obj <- make_multiome_seurat(
+  matrix_path = peri_BT1,   # path to filtered_feature_bc_matrix.h5
+  frag_path   = fragpath_peri_BT1,
+  sample_id   = "peri_BT1",
+  annotation  = annotation
+)
+
+### peri 2 ###
+
+peri_BT2 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT02/BTROHT02_perimarginal_tissue/multiome/LAZ_314/filtered_feature_bc_matrix.h5"
+fragpath_peri_BT2 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT02/BTROHT02_perimarginal_tissue/multiome/LAZ_314/atac_fragments.tsv.gz"
+peri_BT2_obj <- make_multiome_seurat(
+  matrix_path = peri_BT2,   # path to filtered_feature_bc_matrix.h5
+  frag_path   = fragpath_peri_BT2,
+  sample_id   = "peri_BT2",
+  annotation  = annotation
+)
+
+
+peri_BT3 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT03/BTROHT03/BTROHT03_perimarginaltissue/BTROHT03_perimarginaltissue/multiome/LAZ_01027/filtered_feature_bc_matrix.h5"
+fragpath_peri_BT3 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT03/BTROHT03/BTROHT03_perimarginaltissue/BTROHT03_perimarginaltissue/multiome/LAZ_01027/atac_fragments.tsv.gz"
+
+peri_BT3_obj <- make_multiome_seurat(
+  matrix_path = peri_BT3,   # path to filtered_feature_bc_matrix.h5
+  frag_path   = fragpath_peri_BT3,
+  sample_id   = "peri_BT3",
+  annotation  = annotation
+)
+
+
+
+peri_BT4 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT04/BTROHT04/BTROHT04_T/BTROHT04_T7_T10/multiome/LAZ_158/filtered_feature_bc_matrix.h5"
+fragpath_peri_BT4 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT04/BTROHT04/BTROHT04_T/BTROHT04_T7_T10/multiome/LAZ_158/atac_fragments.tsv.gz"
+
+
+peri_BT4_obj <- make_multiome_seurat(
+  matrix_path = peri_BT4,   # path to filtered_feature_bc_matrix.h5
+  frag_path   = fragpath_peri_BT4,
+  sample_id   = "peri_BT4",
+  annotation  = annotation
+)
+
+
+peri_BT6 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT06/BTROHT06/BTROHT06_perimarginaltissue/BTROHT06_perimarginaltissue/multiome/LAZ_00924/filtered_feature_bc_matrix.h5"
+fragpath_peri_BT6 <- "/group/sottoriva/00-PROCESSED_DATA/2023-ROVIGO/BTROHT06/BTROHT06/BTROHT06_perimarginaltissue/BTROHT06_perimarginaltissue/multiome/LAZ_00924/atac_fragments.tsv.gz"
+
+peri_BT6_obj <- make_multiome_seurat(
+  matrix_path = peri_BT6,   # path to filtered_feature_bc_matrix.h5
+  frag_path   = fragpath_peri_BT6,
+  sample_id   = "peri_BT6",
+  annotation  = annotation
+)
+
+
+```
+
+```{r}
+add_suffix <- function(obj, label) {
+  # label = "BT1_BT2_BT4_Core", etc.
+  
+  suffix <- paste0("_", label)
+  
+  obj <- RenameCells(
+    object = obj,
+    new.names = paste0(colnames(obj), suffix)
+  )
+  
+  # store this label in metadata too (optional but useful)
+  obj$sample_group <- label
+  
+  return(obj)
+}
+
+
+
+core_BT1_BT2_BT4_obj <- add_suffix(core_BT1_BT2_BT4_obj, "BT1_BT2_BT4_Core")
+core_BT3_BT6_obj     <- add_suffix(core_BT3_BT6_obj,     "BT3_BT6_Core")
+
+peri_BT1_obj <- add_suffix(peri_BT1_obj, "BTROHT01_Peri")
+peri_BT2_obj <- add_suffix(peri_BT2_obj, "BTROHT02_Peri")
+peri_BT3_obj <- add_suffix(peri_BT3_obj, "BTROHT03_Peri")
+peri_BT4_obj <- add_suffix(peri_BT4_obj, "BTROHT04_Peri")
+peri_BT6_obj <- add_suffix(peri_BT6_obj, "BTROHT06_Peri")
+
+
+```
+
+```{r}
+tumor_barcodes <- readLines("/home/fatemeh.nasrabadi/tumor_GEX_clean_barcodes_core_peri.txt")
+
+length(tumor_barcodes)
+head(tumor_barcodes)
+```
+
+
+```{r}
+keep_core124 <- intersect(colnames(core_BT1_BT2_BT4_obj), tumor_barcodes)
+
+length(keep_core124)  # how many tumor cells in this object?
+
+core_BT1_BT2_BT4_tumor <- subset(
+  core_BT1_BT2_BT4_obj,
+  cells = keep_core124
+)
+
+
+```
+
+```{r}
+
+keep_core36 <- intersect(colnames(core_BT3_BT6_obj), tumor_barcodes)
+
+core_BT3_BT6_tumor <- subset(
+  core_BT3_BT6_obj,
+  cells = keep_core36
+)
+
+
+keep_peri1 <- intersect(colnames(peri_BT1_obj), tumor_barcodes)
+
+peri_BT1_tumor <- subset(
+  peri_BT1_obj,
+  cells = keep_peri1
+)
+
+keep_peri2 <- intersect(colnames(peri_BT2_obj), tumor_barcodes)
+
+peri_BT2_tumor <- subset(
+  peri_BT2_obj,
+  cells = keep_peri2
+)
+
+keep_peri3 <- intersect(colnames(peri_BT3_obj), tumor_barcodes)
+
+peri_BT3_tumor <- subset(
+  peri_BT3_obj,
+  cells = keep_peri3
+)
+
+keep_peri4 <- intersect(colnames(peri_BT4_obj), tumor_barcodes)
+
+peri_BT4_tumor <- subset(
+  peri_BT4_obj,
+  cells = keep_peri4
+)
+
+keep_peri6 <- intersect(colnames(peri_BT6_obj), tumor_barcodes)
+
+peri_BT6_tumor <- subset(
+  peri_BT6_obj,
+  cells = keep_peri6
+)
+
+sapply(
+  list(core_BT1_BT2_BT4_tumor, core_BT3_BT6_tumor,
+       peri_BT1_tumor, peri_BT2_tumor, peri_BT3_tumor,
+       peri_BT4_tumor, peri_BT6_tumor),
+  ncol
+)
+```
+
+```{r}
+tumor_combined <- merge(
+  core_BT1_BT2_BT4_tumor,
+  y = list(
+    core_BT3_BT6_tumor,
+    peri_BT1_tumor,
+    peri_BT2_tumor,
+    peri_BT3_tumor,
+    peri_BT4_tumor,
+    peri_BT6_tumor
+  ),
+  project = "Rovigo_tumor_core_peri"
+)
+```
+
+```{r} 
+#You probably want a simple label to use in plots: "Core" vs "Peri".
+tumor_combined$region <- ifelse(
+  grepl("_Core$", colnames(tumor_combined)),
+  "Core",
+  "Peri"
+)
+
+table(tumor_combined$region)
+
+#If you also want patient group:
+# extract the middle part: e.g. BT1_BT2_BT4 in ..._BT1_BT2_BT4_Core
+# or BTROHT06 in ..._BTROHT06_Peri
+parts <- strsplit(colnames(tumor_combined), "_")
+
+tumor_combined$patient_group <- sapply(parts, function(x) x[length(x) - 1])
+
+table(tumor_combined$patient_group)
+
+
+```
+
+```{r}
+#save 
+
+#run from here
+saveRDS(
+  tumor_combined,
+  file = "/scratch/fatemeh.nasrabadi/importsnt/THESIS_FINAL/10Samples/tumor_Core_Peri_merged.rds"
+)
+#read later with 
+tumor_combined <- readRDS("/scratch/fatemeh.nasrabadi/importsnt/THESIS_FINAL/10Samples/tumor_Core_Peri_merged.rds")
+
+```
+
+```{r}
+tumor_combined$region <- factor(tumor_combined$region, levels = c("Peri", "Core"))
+```
+
+```{r}
+
+tumor_combined
+
+```
+
+```{r}
+DefaultAssay(tumor_combined) <- "ATAC"
+Annotation(tumor_combined[["ATAC"]]) <- annotation
+
+roi <- "chr10-59880000-59910000"   # or "chr18-3410478-3414979" etc.
+
+cov_plot <- CoveragePlot(
+  object     = tumor_combined,
+  region     = roi,
+  annotation = TRUE,
+  peaks      = FALSE,
+  group.by   = "region",      # <--- here instead of "group"
+  annotation.height = 2,
+  peaks.height      = 1
+)
+
+
+library(ggplot2)
+
+cov_plot + scale_fill_brewer(type = "seq", palette = 5)
+```
+
+```{r}
+
+get_region <- function(gene, flank = 2000, ann) {
+  gr <- ann[ann$gene_name == gene]
+  
+  if (length(gr) == 0) {
+    message("Gene not found in annotation: ", gene)
+    return(NA)
+  }
+  
+  gr <- gr[1]   # first transcript
+  
+  if (as.character(strand(gr)) == "+") {
+    tss <- start(gr)
+  } else {
+    tss <- end(gr)
+  }
+  
+  chr <- as.character(seqnames(gr))
+  
+  paste0(chr, "-", tss - flank, "-", tss + flank)
+}
+
+```
+
+```{r}
+
+library(Signac)
+library(Seurat)
+library(ggplot2)
+
+DefaultAssay(tumor_combined) <- "ATAC"
+ann <- Annotation(tumor_combined[["ATAC"]])
+
+core_genes <- c(
+  "SEC61G","TTC6","CPNE8","CELSR1","RGS6","EFCAB13","DOK6","FBLN7","MIS18BP1",
+  "TEAD2","SYK","ADGRL2","PAX8","CHST8","ANK1","GABRB3","MIPOL1","ZC3HAV1L",
+  "SHISA6","CCDC170"
+)
+
+for (gene in core_genes) {
+  roi <- get_region(gene, flank = 2000, ann = ann)
+  if (is.na(roi)) next
+  
+  message("Perimarginal gene: ", gene, " | ROI: ", roi)
+  
+  cov_plot <- CoveragePlot(
+    object     = tumor_combined,
+    region     = roi,
+    annotation = TRUE,
+    peaks      = FALSE,
+    group.by   = "region",
+    annotation.height = 2,
+    peaks.height      = 1
+  )
+  
+  print(cov_plot + scale_fill_brewer(type = "seq", palette = 5) + ggtitle(gene))
+}
+
+
+```
+
+```{r}
+library(Signac)
+library(Seurat)
+library(ggplot2)
+
+DefaultAssay(tumor_combined) <- "ATAC"
+ann <- Annotation(tumor_combined[["ATAC"]])
+
+peri_genes <- c(
+  "CNTN1","DPP10","GPR85","SLC7A2","POU6F2","PHACTR1","ABCC9","SASH1","PAMR1",
+  "COL28A1","MYOM1","CCDC81","PTPRM","FXYD5","OPALIN","C1orf158","MAP7",
+  "ALDH1A1","PHACTR3","SLC29A2"
+)
+
+for (gene in peri_genes) {
+  roi <- get_region(gene, flank = 2000, ann = ann)
+  if (is.na(roi)) next
+  
+  message("Perimarginal gene: ", gene, " | ROI: ", roi)
+  
+  cov_plot <- CoveragePlot(
+    object     = tumor_combined,
+    region     = roi,
+    annotation = TRUE,
+    peaks      = FALSE,
+    group.by   = "region",
+    annotation.height = 2,
+    peaks.height      = 1
+  )
+  
+  print(cov_plot + scale_fill_brewer(type = "seq", palette = 5) + ggtitle(gene))
+}
+
+
+
+```
+

@@ -1,0 +1,386 @@
+---
+title: "test"
+output: html_document
+date: "2024-11-30"
+---
+
+
+```{r}
+library(Rcongas)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+```
+
+```{r}
+sample = 'lymphoma'
+
+prefix = paste0(sample, "/tutorial/")
+
+out.dir = paste0(prefix, "/congas_data/")
+fig.dir = paste0(prefix, "/congas_figures/")
+
+if (!dir.exists(out.dir)) {dir.create(out.dir, recursive = T)}
+if (!dir.exists(fig.dir)) {dir.create(fig.dir, recursive = T)}
+```
+
+
+```{r}
+data(atac_counts) 
+data(rna_counts)
+```
+
+
+```{r}
+typeof(atac_counts)
+rna_counts
+
+```
+
+
+
+```{r}
+data(features)
+
+features
+
+
+```
+
+```{r}
+atac_featureDF = data.frame(id = rownames(atac_counts)) %>%
+  tidyr::separate(id, c('chr', 'from', 'to'), '-')
+
+atac_featureDF
+
+atac = Rcongas::create_congas_tibble(counts = atac_counts, 
+                                     modality = 'ATAC', 
+                                     save_dir = NULL,
+                                     features = atac_featureDF)
+
+# Compute normalization factors
+norm_atac = Rcongas:::auto_normalisation_factor(atac) %>%
+  mutate(modality = 'ATAC')
+
+rna = Rcongas::create_congas_tibble(counts = rna_counts, 
+                                    modality = 'RNA', 
+                                    save_dir=NULL, 
+                                    features = features)
+
+
+# Compute normalization factors
+norm_rna = Rcongas:::auto_normalisation_factor(rna) %>%
+  mutate(modality = 'RNA')
+
+atac = atac %>% mutate(value = as.integer(value))
+rna = rna %>% mutate(value = as.integer(value))
+
+```
+
+```{r}
+data(example_segments)
+
+# Remove these chromosomes
+segments = example_segments %>% dplyr::filter(chr != 'chrX', chr != 'chrY')
+```
+
+
+```{r}
+x = init(
+  rna = rna,
+  atac = atac,
+  segmentation = segments, #%>% mutate(copies = as.integer(round(copies))),
+  rna_normalisation_factors = norm_rna,
+  atac_normalisation_factors = norm_atac,
+  rna_likelihood = "NB", 
+  atac_likelihood = "NB",
+  description = paste0('Bimodal ', sample),
+  multiome = TRUE)
+
+```
+
+
+```{r}
+
+data(metadata)
+
+tail(metadata)
+
+x$input$metadata = metadata
+
+plot_data(x, 
+  to_plot = 'type', 
+  position = 'stack',
+  segments = get_input(x, what = 'segmentation') %>%
+    ungroup() %>%
+    mutate(L = to - from) %>%
+    dplyr::arrange(dplyr::desc(L)) %>%
+    dplyr::top_n(9) %>%
+    pull(segment_id))
+
+
+
+```
+
+
+
+
+```{r}
+ggplot(x$input$segmentation, aes(x=ATAC_nonzerocells, y=ATAC_peaks)) + geom_point() + theme_bw()
+x = Rcongas::filter_segments(x, RNA_nonzerocells = 300, ATAC_nonzerocells = 300)
+
+
+```
+
+```{r}
+
+ggplot(x$input$segmentation, aes(x=RNA_nonzerocells, y=RNA_genes)) + geom_point() + theme_bw()
+
+
+```
+
+
+
+```{r}
+
+x = Rcongas::filter_segments(x, RNA_nonzerocells = 300, ATAC_nonzerocells = 300)
+
+```
+
+
+
+```{r}
+
+plot_data(
+  x,
+  what = 'histogram',
+  segments = get_input(x, what = 'segmentation') %>%
+    ungroup() %>%
+    mutate(L = to - from) %>%
+    dplyr::arrange(dplyr::desc(L)) %>%
+    dplyr::top_n(9) %>%
+    pull(segment_id)
+)
+
+
+```
+
+
+```{r}
+
+data(metadata)
+
+x$input$metadata = metadata
+
+plot_data(x, 
+  to_plot = 'type', 
+  position = 'stack',
+  segments = get_input(x, what = 'segmentation') %>%
+    ungroup() %>%
+    mutate(L = to - from) %>%
+    dplyr::arrange(dplyr::desc(L)) %>%
+    dplyr::top_n(9) %>%
+    pull(segment_id))
+
+
+```
+
+
+
+```{r}
+library(Rcongas)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+
+
+```
+
+
+
+```{r}
+
+data(multiome_congas_object) 
+
+multiome_congas_object$input$multiome
+```
+
+
+```{r}
+reticulate::use_condaenv("CONGAS", required = TRUE)
+library(reticulate)
+# devtools::load_all("~/work/r_packages/rcongas/")
+#
+```
+
+
+```{r}
+library(Rcongas)
+library(dplyr)
+library(ggplot2)
+library(stringr)
+
+filt = segments_selector_congas(multiome_congas_object)
+# You can save the filtering result to avoid re-running the whole pipeline in future steps
+# saveRDS(filt, paste0(out.dir, "rcongas_obj_filtered.rds"))
+
+#
+```
+
+
+
+
+
+```{r}
+
+# Set values fro the model hyperparameters
+k = c(1:4)
+
+binom_limits = c(40,1000)
+model = "BIC"
+
+lr = 0.01
+temperature = 20
+
+steps = 5000
+lambda = 0.5
+
+# Estimate hyperparameters
+hyperparams_filt <- auto_config_run(multiome_congas_object, k, 
+                                    prior_cn=c(0.2, 0.6, 0.1, 0.05, 0.05),
+                                    init_importance = 0.6, 
+                                    CUDA = FALSE, 
+                                    normal_cells=TRUE)
+
+# Run
+hyperparams_filt$binom_prior_limits = binom_limits
+
+fit_filt <- Rcongas:::fit_congas(multiome_congas_object,
+                                 K = k, 
+                                 lambdas = lambda, 
+                                 learning_rate = lr, 
+                                 steps = steps,
+                                 model_parameters = hyperparams_filt, 
+                                 model_selection = model,
+                                 latent_variables = "G",
+                                 CUDA = FALSE,
+                                 temperature = temperature, 
+                                 same_mixing = TRUE, 
+                                 threshold = 0.001)
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+sum(is.na(atac$chr)) 
+
+atac
+
+
+```
+
+```{r}
+
+x = Rcongas::filter_segments(x, RNA_nonzerocells = 300, ATAC_nonzerocells = 300)
+
+```
+
+
+
+```{r}
+plot_data(
+  x,
+  what = 'histogram',
+  segments = get_input(x, what = 'segmentation') %>%
+    ungroup() %>%
+    mutate(L = to - from) %>%
+    dplyr::arrange(dplyr::desc(L)) %>%
+    dplyr::top_n(9) %>%
+    pull(segment_id)
+)
+
+```
+
+
+```{r}
+data(metadata)
+
+x$input$metadata = metadata
+
+plot_data(x, 
+  to_plot = 'type', 
+  position = 'stack',
+  segments = get_input(x, what = 'segmentation') %>%
+    ungroup() %>%
+    mutate(L = to - from) %>%
+    dplyr::arrange(dplyr::desc(L)) %>%
+    dplyr::top_n(9) %>%
+    pull(segment_id))
+
+
+
+```
+
+
+
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
