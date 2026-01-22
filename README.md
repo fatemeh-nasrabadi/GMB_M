@@ -58,6 +58,3 @@
 * **ROVIGO_WGS_samplecheck.ipynb**: Validates WGS samples.
 * **SparseSignatures_ex.Rmd**: Sparse signature analysis for WGS data.
 
-#### **All_figures.pdf**:
-
-* Compilation of all figures summarizing the key findings.
