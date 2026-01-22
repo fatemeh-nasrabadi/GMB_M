@@ -1,8 +1,23 @@
-### **Project Description**:
+### **10x Single Cell Multiome RNA + ATAC**
 
-This repository contains the analysis pipeline and results of a study focused on the molecular heterogeneity of glioblastoma (GBM), comparing tumor cells from the core and perimarginal zones. The project utilizes multi-omics techniques, including **single-cell RNA sequencing (scRNA-seq)** and **single-cell ATAC sequencing (scATAC-seq)**, to investigate gene expression and chromatin accessibility profiles of GBM cells. By comparing the core and perimarginal tumor regions, the project aims to identify key genes, transcriptional programs, and chromatin accessibility profiles associated with the invasive behavior of perimarginal tumor cells, advancing our understanding of glioblastoma heterogeneity and informing potential therapeutic strategies.
+* **Data Sources**:
 
----
+  * **10x multiome snRNA-seq** and **snATAC-seq** raw multiome data.
+  * **100x WGS analysis**: Genomic landscape of the GBM cohort.
+
+* **Analysis Flow**:
+
+  * Sample analysis of gene expression and chromatin accessibility.
+  * Data integration of RNA and ATAC modalities.
+
+* **Downstream Analysis**:
+
+  * **Gene Expression**: Differential expression, pathway enrichment analysis, **Hotspot** (identifies informative genes and gene modules), and **LIANA** (ligand-receptor interaction analysis).
+  * **Chromatin Accessibility**: ATAC-seq analysis for regulatory regions.
+
+* **Whole-Genome Sequencing (WGS)**:
+
+  * Analyzes **genomic landscape** of the GBM cohort, identifying genomic alterations and mutational signatures.
 
 ### **Folder Breakdown**:
 
@@ -45,10 +60,3 @@ This repository contains the analysis pipeline and results of a study focused on
 #### **All_figures.pdf**:
 
 * Compilation of all figures summarizing the key findings.
-
----
-
-### **Project Objective**:
-
-The primary goal of this project is to explore and compare the molecular and epigenetic features of glioblastoma tumor cells from the core and perimarginal regions. By leveraging multi-omics technologies, the study identifies genes, transcriptional programs, and chromatin accessibility profiles linked to the invasive behavior of perimarginal tumor cells. The insights gained will help improve our understanding of glioblastoma heterogeneity and potentially lead to more effective therapeutic strategies targeting the perimarginal zone.
-
