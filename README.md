@@ -21,19 +21,19 @@
 
 ### **Folder Breakdown**:
 
-#### **1__10xMultiome_snATAC_snRNA**:
+**1__10xMultiome_snATAC_snRNA**:
 
 * **10x_snATAC_snRNA analysis_Core1.ipynb**:
 
-  * **Single-Cell Quality Control (QC) for RNA Data**
-  * **Single-Cell RNA Data Filtration**
-  * **Single-Cell Dimensionality Reduction and Clustering**
-  * **Cell Type Annotation with CellTypist for Single-Cell Data**
-  * **Single-Cell Gene Expression Analysis**
-  * **Single-Cell Copy Number Variation (CNV) Analysis**
-  * **Single-Cell ATAC-Seq Analysis**
-  * **ATAC Data Normalization and Dimensionality Reduction for Single-Cell Data**
-  * **Integration of Single-Cell RNA and ATAC Data**
+  * **Quality Control (QC) for GEX Modality (RNA Data)**
+  * **RNA Data Filtration (GEX Modality)**
+  * **Dimensionality Reduction and Clustering (GEX Modality)**
+  * **Cell Type Annotation with CellTypist (GEX Modality)**
+  * **Gene Expression Analysis (GEX Modality)**
+  * **Copy Number Variation (CNV) Analysis (GEX Modality)**
+  * **ATAC-Seq Analysis (ATAC Modality)**
+  * **ATAC Data Normalization and Dimensionality Reduction (ATAC Modality)**
+  * **Integration of GEX and ATAC Modalities**
   * **Data Export**
   * **Final Outputs**
 
