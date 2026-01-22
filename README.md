@@ -1,4 +1,4 @@
-### **10x Single Cell Multiome RNA + ATAC**
+### **10x Single Cell Multiome Analysis: RNA + ATAC and Genomic Landscape of GBM Cohort**
 
 * **Data Sources**:
 
@@ -25,18 +25,19 @@
 
 * **10x_snATAC_snRNA analysis_Core1.ipynb**:
 
-  * **Quality Control (QC) for RNA Data**
-  * **RNA Data Filtration**
-  * **Dimensionality Reduction and Clustering**
-  * **Cell Type Annotation with CellTypist**
-  * **Gene Expression Analysis**
-  * **Copy Number Variation (CNV) Analysis**
-  * **ATAC-Seq Analysis**
-  * **ATAC Data Normalization and Dimensionality Reduction**
-  * **Integration of RNA and ATAC Data**
+  * **Single-Cell Quality Control (QC) for RNA Data**
+  * **Single-Cell RNA Data Filtration**
+  * **Single-Cell Dimensionality Reduction and Clustering**
+  * **Cell Type Annotation with CellTypist for Single-Cell Data**
+  * **Single-Cell Gene Expression Analysis**
+  * **Single-Cell Copy Number Variation (CNV) Analysis**
+  * **Single-Cell ATAC-Seq Analysis**
+  * **ATAC Data Normalization and Dimensionality Reduction for Single-Cell Data**
+  * **Integration of Single-Cell RNA and ATAC Data**
   * **Data Export**
   * **Final Outputs**
-* **scCONGAS_Core1.Rmd**: Data processing and analysis for multiome integration.
+
+* **scCONGAS_Core1.Rmd**: Unsupervised single-cell clustering based on CNVs and multiome data.
 
 #### **2_GEX** (Gene Expression Analysis):
 
